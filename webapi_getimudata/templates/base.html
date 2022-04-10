@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<!--Import Google Icon Font-->
+		<link href="{{ url_for('static', filename='css/icons.css') }}" rel="stylesheet">
+		<!--Import materialize.css-->
+		<link type="text/css" rel="stylesheet" href="{{ url_for('static', filename='css/materialize.min.css') }}"  media="screen,projection"/>
+
+		<!--Let browser know website is optimized for mobile-->
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+		<title>Starter Template - Materialize</title>
+	</head>
+
+	<body>
+		<nav class="light-blue lighten-1" role="navigation">
+			<div class="nav-wrapper container"><a id="logo-container" href="#" class="brand-logo">CSNext 2022</a>
+				<ul class="right hide-on-med-and-down">
+					<li>
+						<a href="#">Navbar Link</a>
+					</li>
+				</ul>
+
+				<ul id="nav-mobile" class="sidenav">
+					<li>
+						<a href="#">Navbar Link</a>
+					</li>
+				</ul>
+				<a href="#" data-target="nav-mobile" class="sidenav-trigger">
+					<i class="material-icons">menu</i>
+				</a>
+			</div>
+		</nav>
+
+		<div class="container">
+			<div class="section">
+				{% block content %}{% endblock %}
+			</div>
+		</div>
+
+		<!--JavaScript at end of body for optimized loading-->
+		<script type="text/javascript" src="{{ url_for('static', filename='js/materialize.min.js') }}"></script>
+		{% block js %}{% endblock %}
+	</body>
+</html>

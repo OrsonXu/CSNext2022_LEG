@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col s12 m4">
+        <p id="start-text" style="display: block;"></p>
+        <button id="start-button" class="btn waves-effect waves-light" style="display: block;">Tap to Send Data</button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col s12 m4">
+        <p id="stop-text" style="display: ;"></p>
+        <button id="stop-button" class="btn waves-effect waves-light" style="display: ;">Tap to Stop Data</button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col s12 m4">
+        <p id="permission-text" style="display: ;"></p>
+        <button id="permission-button" class="btn waves-effect waves-light" style="display: ;">IOS ONLY: Tap to Obtain Permission</button>
+    </div>
+</div>
+
+<div class="row">
+    <div id="console" class="col s12 m4">
+        
+    </div>
+</div>
+<div class="row">
+    <div id="debug" class="col s12 m4">
+        
+    </div>
+</div>
+{% endblock %}
+
+{% block js %}
+<script type="text/javascript" src="{{ url_for('static', filename='js/socket.io.js') }}"></script>
+<script type="text/javascript" charset="utf-8">
+
+
+const common_frequency = 30;
+
+var accelerometer;
+var acc_i = 0;
+
+var gyroscope;
+var gyr_i = 0;
+
+var magnetometer;
+var mag_i = 0;
+
+var linearaccelerometer;
+var lin_i = 0;
+
+var abs_orisensor;
+var abs_i = 0;
+
+var rel_orisensor;
+var rel_i = 0;
+
+var data = [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1];
+var dataShort = [-1,-1,-1,-1,-1,-1,-1,-1,-1]
+
+var package = '{"timestamp":[],"acc_x":[],"acc_y":[],"acc_z":[],"linearacc_x":[],"linearacc_y":[],"linearacc_z":[],"gyro_x":[],"gyro_y":[],"gyro_z":[],"mag_x":[],"mag_y":[],"mag_z":[],"absori_x":[],"absori_y":[],"absori_z":[],"absori_w":[],"relori_x":[],"relori_y":[],"relori_z":[],"relori_w":[],"batch":[]}';
+var packageShort_template = '{"timestamp":[],"linearacc_x":[],"linearacc_y":[],"linearacc_z":[],"gyro_x":[],"gyro_y":[],"gyro_z":[],"batch":[],"interval":[]}';
+var packageShort = `${packageShort_template}`;
+
+var jsonPackage = JSON.parse(package);
+var jsonPackageShort = JSON.parse(packageShort);
+
+var complete = false;
+
+var socket;
+
+var interval;
+
+var count = 0;
+
+var batch = 0;
+
+var timestamp = Date.now();
+
+var package_count = 0;
+
+function loadPackageShort(count) {
+    jsonPackageShort['timestamp'].push(dataShort[0]);
+
+    jsonPackageShort['linearacc_x'].push(dataShort[1]);
+    jsonPackageShort['linearacc_y'].push(dataShort[2]);
+    jsonPackageShort['linearacc_z'].push(dataShort[3]);
+
+    jsonPackageShort['gyro_x'].push(dataShort[4]);
+    jsonPackageShort['gyro_y'].push(dataShort[5]);
+    jsonPackageShort['gyro_z'].push(dataShort[6]);
+
+    jsonPackageShort['batch'].push(dataShort[7])
+    jsonPackageShort['interval'].push(dataShort[8])
+
+    packageShort = JSON.stringify(jsonPackageShort);
+    return count += 1;
+}
+
+function loadDataShort (sensor,x,y,z,ts,interval,batch) {
+
+    dataShort[0] = ts;
+    dataShort[7] = batch;
+    dataShort[8] = interval;
+
+    if (sensor == 'linearacc') {
+        dataShort[1] = x;
+        dataShort[2] = y;
+        dataShort[3] = z;
+    } else if (sensor == 'gyro') {
+        dataShort[4] = x;
+        dataShort[5] = y;
+        dataShort[6] = z;
+    }
+
+}
+
+function reset(input) {
+    input = [-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1,-1];
+    complete = false;
+    return input;
+}
+
+function freq(input,t1,t2) {
+    return t2-t1
+}
+
+document.getElementById('permission-button').onclick = function () {
+    // setup sockets
+    socket = io();
+    socket.on('connect', function() {});
+    socket.on('message', function(message) {});
+    socket.on('debug', function(message) {});
+
+    DeviceMotionEvent.requestPermission().then(response => {
+        if (response == 'granted') {
+            console.log("accelerometer permission granted");
+            socket.emit('debug', "ios accelerometer permission granted");
+        }
+    });
+    
+}
+
+function handleAccelerationEvent(event) {
+
+    interval = event.interval;
+        temp = Date.now();
+
+        loadDataShort('linearacc',event.acceleration.x,event.acceleration.y,event.acceleration.z,temp,batch,interval);
+
+        loadDataShort('gyro',event.rotationRate.alpha,event.rotationRate.beta,event.rotationRate.gamma,temp,batch,interval);
+
+        count = loadPackageShort(count);
+        // Send data after get 15 data points
+        if (count % 15 == 0) {
+            socket.emit('package',packageShort);
+            packageShort = `${packageShort_template}`;
+            jsonPackageShort = JSON.parse(packageShort);
+            
+            timestamp = temp;
+            batch += 1;
+        }
+        document.getElementById('debug').innerHTML = batch;
+}
+
+document.getElementById('start-button').onclick = function () {
+    document.getElementById('start-button').style.display = 'none';
+    document.getElementById('stop-button').style.display = 'block';
+
+    // setup sockets
+    socket = io();
+    socket.on('connect', function() {});
+    socket.on('message', function(message) {});
+    socket.on('debug', function(message) {});
+
+    window.addEventListener('devicemotion', handleAccelerationEvent);
+
+}
+
+document.getElementById('stop-button').onclick = function () {
+    document.getElementById('start-button').style.display = 'block';
+    document.getElementById('stop-button').style.display = 'none';
+
+    socket.emit('disconnect', {});
+
+    window.removeEventListener('devicemotion', handleAccelerationEvent);
+
+}
+
+</script>
+{% endblock %}
