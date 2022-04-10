@@ -5,6 +5,7 @@
 - Install [Anaconda software](https://www.anaconda.com/) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html).
 - Install [ngrok](https://ngrok.com/download) (you need to sign up and login for autnentication)
 - Install [git](https://github.com/git-guides/install-git) (if you are not familiar with Git/Github, please read [this tutorial](https://product.hubspot.com/blog/git-and-github-tutorial-for-beginners))
+- If you don't have a Github account, please create one and follow [this tutorial](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent#about-ssh-key-generation) to set up the account with a new SSH (you can ignore the "Adding your SSH key to the ssh-agent" part).
 
 ## Python Environment
 
