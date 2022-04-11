@@ -12,6 +12,7 @@
 Open a terminal, and run the following code one by one:
 
 - `cd [a directory where you want to save the code base]` e.g., `cd ~/Desktop/`
+- `git clone git@github.com:OrsonXu/CSNext2022_LEG.git` to download the repo
 - `cd [the directory of the current README.md]` e.g., `cd ~/Desktop/CSNext2022_LEG`
 - `conda create --name csnext python=3.7` to install a new environment named "csnext" <- you can also replace it with a name you prefer
 - `conda activate csnext` to activate the new environment
