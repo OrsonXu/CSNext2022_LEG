@@ -1,0 +1,23 @@
+{
+    "sample_rate":30.0,
+
+    "main_repeat": 3,
+
+    "main_gesture" : [
+        "test"
+    ],
+
+    "main_duration": 10,
+
+    "noise_repeat": 1,
+
+    "noise_gesture" : [
+        "standing_still",
+        "sitting_still",
+        "standing_up",
+        "walking",
+        "lying down"
+    ],
+
+    "noise_duration": 10
+}
