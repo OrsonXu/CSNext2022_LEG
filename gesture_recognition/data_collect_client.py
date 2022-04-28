@@ -2,6 +2,7 @@ from multiprocessing.sharedctypes import Value
 import socketio
 import os
 import matplotlib
+
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import threading
@@ -15,13 +16,14 @@ import sys
 from os.path import dirname, join, abspath
 import random
 import time
+
 sys.path.insert(0, abspath(join(dirname(__file__), '..')))
 current_folder_path = os.path.dirname(abspath(__file__))
 
 ## Gesture config
-json_path = os.path.join(current_folder_path,'GESTURE_CONFIG.json')
+json_path = os.path.join(current_folder_path, 'GESTURE_CONFIG.json')
 
-with open(json_path,"r") as f:
+with open(json_path, "r") as f:
     gesture_config = json.load(f)
 
 gesture_main = gesture_config["main_gesture"]
@@ -34,14 +36,14 @@ noise_repeat = gesture_config["noise_repeat"]
 noise_duration = gesture_config["noise_duration"]
 flag_noise = False
 
-attribute = ["timestamp","acc_x","acc_y","acc_z","linearacc_x","linearacc_y","linearacc_z",
-            "gyro_x","gyro_y","gyro_z","mag_x","mag_y","mag_z",
-            "absori_x","absori_y","absori_z","absori_w","relori_x","relori_y","relori_z","relori_w","batch"]
+attribute = ["timestamp", "acc_x", "acc_y", "acc_z", "linearacc_x", "linearacc_y", "linearacc_z",
+             "gyro_x", "gyro_y", "gyro_z", "mag_x", "mag_y", "mag_z",
+             "absori_x", "absori_y", "absori_z", "absori_w", "relori_x", "relori_y", "relori_z", "relori_w", "batch"]
 
-attributeShort = ["timestamp","linearacc_x","linearacc_y","linearacc_z",
-            "gyro_x","gyro_y","gyro_z","batch","interval"]
+attributeShort = ["timestamp", "linearacc_x", "linearacc_y", "linearacc_z",
+                  "gyro_x", "gyro_y", "gyro_z", "batch", "interval"]
 
-sensor_dataframe = pd.DataFrame(columns = attributeShort)
+sensor_dataframe = pd.DataFrame(columns=attributeShort)
 
 sio = socketio.Client()
 
@@ -49,41 +51,46 @@ flag_socket_start = 0
 count_socket_datapoints = 0
 sensor_list = {
     "timestamp": [],
-    "linearacc_x":[],
-    "linearacc_y":[],
-    "linearacc_z":[],
-    "gyro_x":[],
-    "gyro_y":[],
-    "gyro_z":[],
-    "batch":[],
-    "interval":[],
+    "linearacc_x": [],
+    "linearacc_y": [],
+    "linearacc_z": [],
+    "gyro_x": [],
+    "gyro_y": [],
+    "gyro_z": [],
+    "batch": [],
+    "interval": [],
 }
 
 count = 0
 data_count = 0
-buffer_window_size = int(gesture_config["sample_rate"] * 5) # buffer to calculate realtime rotation
-window_size = int(gesture_config["sample_rate"] * 3) # standard input size of ML models
+buffer_window_size = int(gesture_config["sample_rate"] * 5)  # buffer to calculate realtime rotation
+window_size = int(gesture_config["sample_rate"] * 3)  # standard input size of ML models
 preds_presence_record = []
 sensor_all_data_list = dict.fromkeys(attributeShort, [])
 sensor_window_data_list = dict.fromkeys(attributeShort, [])
+
 
 @sio.event
 def connect():
     print('connection established')
 
+
 @sio.on('sensor')
 def my_message(data):
     print('message received with ', data)
+
 
 @sio.event
 def disconnect():
     print('disconnected from server')
 
+
 @sio.on('count')
 def on_message(c):
     global count_socket_datapoints
     if (count_socket_datapoints != c):
-        print('not the same!!!',c-count_socket_datapoints)
+        print('not the same!!!', c - count_socket_datapoints)
+
 
 @sio.on('sensor package')
 def on_message(message):
@@ -93,8 +100,8 @@ def on_message(message):
     global sensor_all_data_list
     global sensor_window_data_list
     global data_count
-    #print(json.loads(message))
-    
+    # print(json.loads(message))
+
     count_socket_datapoints += 1
     if flag_socket_start == 0:
         pass
@@ -131,11 +138,13 @@ def on_message(message):
                 # else:
             gesture_recognition_realtime(sensor_window_data_list)
 
+
+
 def gesture_recognition_realtime(sensor_data):
     global preds_presence_record
     global gesture_pred_record
     global count
-    
+    # perform shaking behavior recognition on the latest input
     df_data = pd.DataFrame(sensor_data)
     df_data = df_data[attributeShort]
     if count == 0:
@@ -145,8 +154,8 @@ def gesture_recognition_realtime(sensor_data):
 
     latest_input = [df_data.iloc[-window_size:].values]
     step = 30
-    for i in range(1, round(length/step)):
-        latest_input.append(df_data.iloc[-window_size-i*step:-i*step].values)
+    for i in range(1, round(length / step)):
+        latest_input.append(df_data.iloc[-window_size - i * step:-i * step].values)
     latest_input = np.array(latest_input)
     if count == 1:
         print(latest_input)
@@ -156,9 +165,9 @@ def gesture_recognition_realtime(sensor_data):
     latest_confs_presence = []
     latest_preds_presence = []
     for inp in latest_input:
-        prediction = [0,0]
+        prediction = [0, 0]
         for point in inp:
-            if abs(point[1])+abs(point[2])+abs(point[3]) > 1:
+            if abs(point[1]) + abs(point[2]) + abs(point[3]) > 1:
                 prediction[1] += 1
             else:
                 prediction[0] += 0
@@ -169,7 +178,7 @@ def gesture_recognition_realtime(sensor_data):
     preds_presence_len = round(buffer_window_size / step) + 1
     if (len(preds_presence_record) > preds_presence_len):
         preds_presence_record = preds_presence_record[-preds_presence_len:]
-    if preds_presence_record.count(1) > round(len(preds_presence_record)/2):
+    if preds_presence_record.count(1) > round(len(preds_presence_record) / 2):
         print("Shaking!")
     else:
         print("Not shaking!")
@@ -264,7 +273,6 @@ def gesture_recognition_realtime(sensor_data):
 #             gesture_prediction_record = [gesture_prediction_record[1]]
 
 
-
 def TIMER():
     """ A simple timer function to print clocking in terminal
     """
@@ -279,7 +287,7 @@ def TIMER():
 
     print('1')
     time.sleep(1)
-    
+
     print('Start!\n')
 
     if (flag_main):
@@ -289,14 +297,15 @@ def TIMER():
     else:
         raise ValueError("Flag main/noise is not correct!")
 
-    for tick in range(duration,0,-1):
-        print(f"Time Left: {tick}", end = "\n")
+    for tick in range(duration, 0, -1):
+        print(f"Time Left: {tick}", end="\n")
         time.sleep(1)
     print("")
 
     flag_socket_start = 0
-    
+
     return
+
 
 def record(gesture, repeat, path):
     """The record function given a gesture
@@ -314,9 +323,9 @@ def record(gesture, repeat, path):
         print(f'\nThis is No. {loop_count + 1} / {repeat} time for the gesture: ||  {gesture}  || \n')
         prefix = ""
         if flag_main:
-            prefix =  "GESTURE_"
+            prefix = "GESTURE_"
         if flag_noise:
-            prefix =  "NOISE_"
+            prefix = "NOISE_"
         filePath = os.path.join(path, prefix + f'{gesture}_{loop_count}.csv')
 
         while True:
@@ -326,8 +335,8 @@ def record(gesture, repeat, path):
                 continue
             else:
                 break
-        
-        t = threading.Thread(target=TIMER,args=())
+
+        t = threading.Thread(target=TIMER, args=())
         t.start()
         t.join()
 
@@ -337,18 +346,18 @@ def record(gesture, repeat, path):
             if (key == 'Y' or key == 'y' or key == 1 or key == "1" or key == ""):
                 sensor_dataframe = pd.DataFrame.from_dict(sensor_list)
                 print(sensor_dataframe.shape[0])
-                sensor_dataframe.to_csv(filePath,index = False)
+                sensor_dataframe.to_csv(filePath, index=False)
                 print('Nice job! Record done\n')
                 sensor_list = {
                     "timestamp": [],
-                    "linearacc_x":[],
-                    "linearacc_y":[],
-                    "linearacc_z":[],
-                    "gyro_x":[],
-                    "gyro_y":[],
-                    "gyro_z":[],
-                    "batch":[],
-                    "interval":[]
+                    "linearacc_x": [],
+                    "linearacc_y": [],
+                    "linearacc_z": [],
+                    "gyro_x": [],
+                    "gyro_y": [],
+                    "gyro_z": [],
+                    "batch": [],
+                    "interval": []
                 }
                 loop_count += 1
                 break
@@ -356,18 +365,19 @@ def record(gesture, repeat, path):
                 print('OK! Discard this record. Starting this round again... \n')
                 sensor_list = {
                     "timestamp": [],
-                    "linearacc_x":[],
-                    "linearacc_y":[],
-                    "linearacc_z":[],
-                    "gyro_x":[],
-                    "gyro_y":[],
-                    "gyro_z":[],
-                    "batch":[],
-                    "interval":[]
+                    "linearacc_x": [],
+                    "linearacc_y": [],
+                    "linearacc_z": [],
+                    "gyro_x": [],
+                    "gyro_y": [],
+                    "gyro_z": [],
+                    "batch": [],
+                    "interval": []
                 }
                 break
             else:
                 print("Invalid Input")
+
 
 # Main Function
 
@@ -379,21 +389,21 @@ if __name__ == "__main__":
 
     user = str(input('\nPlease enter your ID: '))
 
-    folder_path = os.path.join(current_folder_path, "..", 'data_from_phone', str(user)+"_"+timestmap)
+    folder_path = os.path.join(current_folder_path, "..", 'data_from_phone', str(user) + "_" + timestmap)
 
     while True:
         if os.path.exists(folder_path):
             print('The User ID is already been taken, please enter another User ID')
             user = str(input('\nPlease enter your ID: '))
-            folder_path = os.path.join(current_folder_path, "..", 'data_from_phone', str(user)+"_"+timestmap)
+            folder_path = os.path.join(current_folder_path, "..", 'data_from_phone', str(user) + "_" + timestmap)
         else:
             break
-    
+
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
 
-    print('\nHello!',f'\nYour ID is {user} \n')
-    
+    print('\nHello!', f'\nYour ID is {user} \n')
+
     # update the global flag to control some setting
     flag_main = True
     flag_noise = False
