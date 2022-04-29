@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 import threading
 import numpy as np
 import time
-# import keras
 import json
 import pandas as pd
 from datetime import date
@@ -185,7 +184,7 @@ def gesture_recognition_realtime(sensor_data):
     # else:
     #     return
 
-
+# Kept for reference upon model integration - aggregation can be re-defined once upon integration 
 # # Get the presence prediction start-end pairs and find the detected window
 #     preds_presence_pairs = post_process_get_pair(preds_presence_record)
 #     if (len(preds_presence_pairs) == 0):
@@ -221,56 +220,7 @@ def gesture_recognition_realtime(sensor_data):
 #         gesture_pred = list(set(tmp_leftright).intersection(set(tmp_forwback)))[0]
 #     print("raw", gesture_pred)
 #     gesture_pred_record.append(gesture_pred)
-#     # two steps robust detection
-#     if (len(gesture_pred_record) == 2):
-#         if (gesture_pred_record[0] == gesture_pred_record[1]):
-#             print("processed", gesture_pred_record[-1])
-#             gesture_pred_record = []
-#             preds_presence_record = []
-#             pause_recognition_flag = 1
-#         else:
-#             gesture_pred_record = [gesture_pred_record[1]]
 
-
-# #detection of the window - processing for shaking or not
-#     preds_presence_pairs = sliding_windowpairs(gesture_prediction_record)
-#     if (len(realtime_prediction_pairs) == 0):
-#         print("no shaking")
-#         return
-#     start_idx = preds_presence_pairs[0][0] * step
-#     end_idx = preds_presence_pairs[-1][0] * step
-#     middle_idx = (start_idx + end_idx) // 2
-#     gesture_window_end = middle_idx + window_size // 2
-#     if (gesture_window_end > buffer_window_size):
-#         gesture_window_end = buffer_window_size
-#     gesture_window_start = gesture_window_end - window_size
-#     if (gesture_window_start < 0):
-#         gesture_window_start = 0
-#     gesture_window_end = gesture_window_start + window_size
-
-#     pred_conf_sensor = model_sensor.predict(data_gesture)[0]
-#     sensor = gesture_recognition_dict_int2str["sensor"][pred_conf_sensor.argmax()]
-
-#     if ("gyro" in sensor):
-#         pred_conf_gyro = model_gyro.predict(data_gesture)[0]
-#         gesture_pred = gesture_recognition_dict_int2str["gyro"][pred_conf_gyro.argmax()][0]
-#     else:
-#         pred_conf_linearacc_leftright = model_linearacc_leftright.predict(data_gesture)[0]
-#         tmp_leftright = gesture_recognition_dict_int2str["linearacc_leftright"][pred_conf_linearacc_leftright.argmax()]
-#         pred_conf_linearacc_forwback = model_linearacc_forwback.predict(data_gesture)[0]
-#         tmp_forwback = gesture_recognition_dict_int2str["linearacc_forwback"][pred_conf_linearacc_forwback.argmax()]
-#         gesture_pred = list(set(tmp_leftright).intersection(set(tmp_forwback)))[0]
-#     print("raw", gesture_pred)
-#     gesture_prediction_record.append(gesture_pred)
-#     # two steps robust detection
-#     if (len(gesture_prediction_record) == 2):
-#         if (gesture_prediction_record[0] == gesture_prediction_record[1]):
-#             print("processed", gesture_prediction_record[-1])
-#             gesture_prediction_record = []
-#             shaking_presence_record = []
-#             #pause_recognition_flag = 1
-#         else:
-#             gesture_prediction_record = [gesture_prediction_record[1]]
 
 
 def TIMER():
