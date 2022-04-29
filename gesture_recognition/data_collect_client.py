@@ -184,7 +184,7 @@ def gesture_recognition_realtime(sensor_data):
     # else:
     #     return
 
-# Kept for reference upon model integration - aggregation can be re-defined once upon integration 
+# Kept for reference upon model integration - aggregation can be re-defined once upon integration
 # # Get the presence prediction start-end pairs and find the detected window
 #     preds_presence_pairs = post_process_get_pair(preds_presence_record)
 #     if (len(preds_presence_pairs) == 0):
@@ -248,7 +248,7 @@ def TIMER():
         raise ValueError("Flag main/noise is not correct!")
 
     for tick in range(duration, 0, -1):
-        print(f"Time Left: {tick}", end="\n")
+        #print(f"Time Left: {tick}", end="\n")
         time.sleep(1)
     print("")
 
